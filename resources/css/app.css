@@ -1,0 +1,137 @@
+/* Global Professional Input Styling (Modern Look) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', 'Source Sans Pro', sans-serif !important;
+}
+
+/* Form Controls (Inputs, Selects, Textareas) */
+.form-control, .custom-select {
+    border-radius: 10px !important;
+    border: 1.5px solid #e2e8f0 !important;
+    padding: 10px 15px !important;
+    height: auto !important;
+    font-size: 14.5px !important;
+    transition: all 0.3s ease-in-out !important;
+    background-color: #f8fafc !important;
+    color: #334155 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.form-control:focus, .custom-select:focus {
+    border-color: #3b82f6 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+    outline: none !important;
+}
+
+/* Labels */
+label {
+    font-weight: 600 !important;
+    color: #475569 !important;
+    margin-bottom: 8px !important;
+    font-size: 14px !important;
+}
+
+/* Cards */
+.card {
+    border-radius: 16px !important;
+    border: none !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+    overflow: hidden;
+}
+
+.card-header {
+    border-bottom: 1px solid #f1f5f9 !important;
+    background-color: transparent !important;
+    padding: 20px !important;
+}
+
+.card-title {
+    font-weight: 700 !important;
+    font-size: 1.1rem !important;
+    color: #1e293b !important;
+}
+
+/* Modern Buttons (Primary) */
+.btn-primary {
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    border-radius: 10px !important;
+    padding: 10px 20px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1) !important;
+    transition: all 0.2s !important;
+}
+
+.btn-primary:hover {
+    background-color: #2563eb !important;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Table Design Refinement */
+.table {
+    color: #334155 !important;
+}
+
+.table thead th {
+    background-color: #f8fafc !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+    color: #64748b !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    padding: 15px !important;
+}
+
+.table tbody td {
+    padding: 15px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    vertical-align: middle !important;
+}
+
+/* Sidebar Menu Refinement */
+.main-sidebar {
+    background-color: #0f172a !important; /* Slate 900 - More modern than basic black */
+}
+
+.nav-sidebar .nav-item {
+    margin: 5px 12px !important;
+}
+
+.nav-sidebar .nav-link {
+    border-radius: 10px !important;
+    padding: 12px 15px !important;
+    transition: all 0.2s ease !important;
+    font-weight: 500 !important;
+}
+
+.nav-sidebar .nav-link.active {
+    background-color: #3b82f6 !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+    color: #fff !important;
+}
+
+.nav-sidebar .nav-link:hover:not(.active) {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: #fff !important;
+}
+
+.nav-header {
+    margin: 15px 12px 5px !important;
+    font-size: 11px !important;
+    letter-spacing: 1px !important;
+    color: #94a3b8 !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+}
+
+.user-panel {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.brand-link {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
