@@ -26,10 +26,21 @@ class User extends Authenticatable
         'password',
         'role',
         'device_user_id',
+        'admission_no',
         'class_id',
         'section_id',
+        'roll_no',
+        'date_of_birth',
+        'gender',
+        'blood_group',
         'shift',
         'phone',
+        'guardian_name',
+        'guardian_relation',
+        'guardian_phone',
+        'guardian_email',
+        'address',
+        'photo',
     ];
 
     /**

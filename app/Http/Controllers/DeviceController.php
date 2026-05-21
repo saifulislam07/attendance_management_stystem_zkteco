@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Device;
+use App\Support\TablePerPage;
 use Illuminate\Http\Request;
 
 class DeviceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $devices = Device::all();
+        $devices = Device::latest()->paginate(TablePerPage::resolve($request));
         return view('devices.index', compact('devices'));
     }
 

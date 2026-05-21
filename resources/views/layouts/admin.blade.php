@@ -17,6 +17,57 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ \App\Models\Setting::get('site_favicon', asset('logo/favicon.png')) }}">
+    <style>
+      .content-wrapper { overflow-x: hidden; }
+      .table-responsive { -webkit-overflow-scrolling: touch; }
+      .card-tools .btn { margin-bottom: .25rem; }
+      .form-control, .btn { min-height: 38px; }
+      .action-btn {
+        width: 34px;
+        height: 32px;
+        min-height: 32px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 2px 2px 0;
+      }
+      .table-list-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      .per-page-form {
+        gap: .35rem;
+      }
+      @media (max-width: 767.98px) {
+        .content-header h1 { font-size: 1.45rem; }
+        .main-header .navbar-nav .nav-link { padding-left: .45rem; padding-right: .45rem; }
+        .card-header { display: block; }
+        .card-header .card-title { float: none; display: block; margin-bottom: .75rem; }
+        .card-header .card-tools { float: none; margin-left: 0; text-align: left; }
+        .card-header .card-tools .btn,
+        .card-footer .btn { display: block; width: 100%; margin: .25rem 0; }
+        .table .action-btn {
+          display: inline-flex;
+          width: 34px;
+          margin: 0 2px 2px 0;
+        }
+        .table-list-footer {
+          align-items: stretch;
+          flex-direction: column;
+        }
+        .per-page-form {
+          justify-content: flex-start;
+        }
+        .table { font-size: .875rem; }
+        .table td, .table th { vertical-align: middle; }
+        .info-box, .small-box { margin-bottom: .75rem; }
+        .brand-link img { width: 54px !important; height: 54px !important; }
+      }
+    </style>
     
     @vite(['resources/js/app.js'])
 </head>
@@ -37,6 +88,11 @@
 
     <!-- Right navbar links -->
     <ul class="navbar-nav ml-auto">
+      <li class="nav-item">
+        <a href="{{ route('profile.edit') }}" class="nav-link">
+            <i class="fas fa-user-cog"></i> Profile
+        </a>
+      </li>
       <li class="nav-item">
         <form action="{{ route('logout') }}" method="POST" class="d-inline">
             @csrf
@@ -65,7 +121,7 @@
       <!-- Sidebar user panel (optional) -->
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
         <div class="info">
-          <a href="#" class="d-block text-warning font-weight-bold text-uppercase">
+          <a href="{{ route('profile.edit') }}" class="d-block text-warning font-weight-bold text-uppercase">
             <i class="fas fa-user-circle mr-2"></i> {{ auth()->user()->name ?? 'Admin' }}
           </a>
         </div>
@@ -78,6 +134,12 @@
             <a href="/" class="nav-link {{ request()->is('/') ? 'active' : '' }}">
               <i class="nav-icon fas fa-tachometer-alt"></i>
               <p>Dashboard</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->is('profile*') ? 'active' : '' }}">
+              <i class="nav-icon fas fa-user-cog"></i>
+              <p>My Profile</p>
             </a>
           </li>
 
@@ -108,6 +170,12 @@
             <a href="{{ route('users.index') }}" class="nav-link {{ request()->is('users*') ? 'active' : '' }}">
               <i class="nav-icon fas fa-users"></i>
               <p>Users</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ route('students.index') }}" class="nav-link {{ request()->is('students*') ? 'active' : '' }}">
+              <i class="nav-icon fas fa-user-graduate"></i>
+              <p>Students</p>
             </a>
           </li>
           @endcan
@@ -238,6 +306,13 @@
                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
                 <h5><i class="icon fas fa-ban"></i> Error!</h5>
                 {{ session('error') }}
+            </div>
+        @endif
+        @if(session('warning'))
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                <h5><i class="icon fas fa-exclamation-triangle"></i> Warning!</h5>
+                {{ session('warning') }}
             </div>
         @endif
         @yield('content')

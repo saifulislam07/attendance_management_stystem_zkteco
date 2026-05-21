@@ -32,11 +32,15 @@
                             <td>{{ \Carbon\Carbon::parse($holiday->date)->format('d M Y') }}</td>
                             <td>{{ $holiday->title }}</td>
                             <td>
-                                <a href="{{ route('holidays.edit', $holiday->id) }}" class="btn btn-info btn-sm">Edit</a>
+                                <a href="{{ route('holidays.edit', $holiday->id) }}" class="btn btn-info btn-sm action-btn" title="Edit" aria-label="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
                                 <form action="{{ route('holidays.destroy', $holiday->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Remove this holiday?')">Delete</button>
+                                    <button type="submit" class="btn btn-danger btn-sm action-btn" title="Delete" aria-label="Delete" onclick="return confirm('Remove this holiday?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>
@@ -48,9 +52,12 @@
                     </tbody>
                 </table>
             </div>
-            <div class="card-footer clearfix">
-                <div class="float-right">
-                    {{ $holidays->links() }}
+            <div class="card-footer table-list-footer">
+                <div>
+                    @include('partials.per-page')
+                </div>
+                <div>
+                    {{ $holidays->appends(request()->query())->links() }}
                 </div>
             </div>
         </div>

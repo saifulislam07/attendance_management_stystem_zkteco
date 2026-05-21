@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Section;
 use App\Models\SchoolClass;
+use App\Support\TablePerPage;
 use Illuminate\Http\Request;
 
 class SectionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $sections = Section::with('schoolClass')->paginate(10);
+        $sections = Section::with('schoolClass')->paginate(TablePerPage::resolve($request));
         return view('sections.index', compact('sections'));
     }
 

@@ -44,11 +44,15 @@
                             </td>
                             <td>{{ $device->last_online_at ? $device->last_online_at->format('d M Y, h:i A') : 'Never' }}</td>
                             <td>
-                                <a href="{{ route('devices.edit', $device) }}" class="btn btn-info btn-sm">Edit</a>
+                                <a href="{{ route('devices.edit', $device) }}" class="btn btn-info btn-sm action-btn" title="Edit" aria-label="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
                                 <form action="{{ route('devices.destroy', $device) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
+                                    <button type="submit" class="btn btn-danger btn-sm action-btn" title="Delete" aria-label="Delete" onclick="return confirm('Are you sure?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>
@@ -59,6 +63,14 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+            <div class="card-footer table-list-footer">
+                <div>
+                    @include('partials.per-page')
+                </div>
+                <div>
+                    {{ $devices->appends(request()->query())->links() }}
+                </div>
             </div>
         </div>
     </div>

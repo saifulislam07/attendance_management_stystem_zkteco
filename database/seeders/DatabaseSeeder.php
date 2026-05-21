@@ -54,22 +54,61 @@ class DatabaseSeeder extends Seeder {
         );
         $admin->assignRole('admin');
 
-        // 3. Create Bulk Data (100+ Each)
+        // 3. Create Sample Student
+        $sampleClass = SchoolClass::factory()->create(['name' => 'Class 1']);
+        $sampleSection = Section::factory()->create([
+            'class_id' => $sampleClass->id,
+            'name' => 'A',
+        ]);
+
+        $student = User::firstOrCreate(
+            ['email' => 'student@gmail.com'],
+            [
+                'name'           => 'Sample Student',
+                'password'       => Hash::make('111111'),
+                'device_user_id' => '1001',
+                'admission_no'   => 'ADM-1001',
+                'role'           => 'student',
+                'class_id'       => $sampleClass->id,
+                'section_id'     => $sampleSection->id,
+                'roll_no'        => '1',
+                'date_of_birth'  => now()->subYears(8)->format('Y-m-d'),
+                'gender'         => 'Male',
+                'blood_group'    => 'B+',
+                'shift'          => 'Morning',
+                'phone'          => '+8801000000001',
+                'guardian_name'  => 'Sample Guardian',
+                'guardian_relation' => 'Father',
+                'guardian_phone' => '+8801000000002',
+                'guardian_email' => 'guardian@example.com',
+                'address'        => 'Dhaka, Bangladesh',
+            ]
+        );
+        $student->assignRole('student');
+
+        // 4. Create Bulk Data (100+ Each)
 
         // Classes & Sections
         $classes = SchoolClass::factory()->count(20)->create();
-        $sections = [];
+        $sections = [$sampleSection];
         foreach ($classes as $class) {
             $sections = array_merge($sections, Section::factory()->count(5)->create(['class_id' => $class->id])->all());
         } // 20 Classes * 5 Sections = 100 Sections
 
         // Users
         $users = User::factory()->count(100)->create()->each(function ($u) use ($sections) {
-            if ($u->hasRole('student')) {
+            $u->assignRole($u->role);
+
+            if ($u->role === 'student') {
                 $section = $sections[array_rand($sections)];
                 $u->update([
                     'section_id' => $section->id,
                     'class_id'   => $section->class_id,
+                    'admission_no' => 'ADM-' . $u->id,
+                    'roll_no'    => (string) mt_rand(1, 999),
+                    'guardian_name' => fake()->name(),
+                    'guardian_relation' => fake()->randomElement(['Father', 'Mother', 'Guardian']),
+                    'guardian_phone' => fake()->phoneNumber(),
                 ]);
             }
         });

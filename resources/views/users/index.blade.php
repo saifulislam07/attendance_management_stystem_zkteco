@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'User Management')
-@section('page_title', 'All Users')
+@section('page_title', 'Users')
 
 @section('content')
 <div class="row">
@@ -13,46 +13,25 @@
             <div class="card-body">
                 <form action="{{ route('users.index') }}" method="GET">
                     <div class="row">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label>Role</label>
                             <select name="role" class="form-control">
                                 <option value="">All Roles</option>
                                 @foreach($roles as $role)
+                                    @continue($role->name === 'student')
                                     <option value="{{ $role->name }}" {{ request('role') == $role->name ? 'selected' : '' }}>
                                         {{ ucfirst(str_replace('_', ' ', $role->name)) }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label>Class</label>
-                            <select name="class_id" class="form-control">
-                                <option value="">All Classes</option>
-                                @foreach($classes as $class)
-                                    <option value="{{ $class->id }}" {{ request('class_id') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label>Section</label>
-                            <select name="section_id" class="form-control">
-                                <option value="">All Sections</option>
-                                @foreach($sections as $section)
-                                    <option value="{{ $section->id }}" {{ request('section_id') == $section->id ? 'selected' : '' }}>{{ $section->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label>Shift</label>
-                            <select name="shift" class="form-control">
-                                <option value="">All Shifts</option>
-                                <option value="Morning" {{ request('shift') == 'Morning' ? 'selected' : '' }}>Morning</option>
-                                <option value="Day" {{ request('shift') == 'Day' ? 'selected' : '' }}>Day</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
+                        <div class="col-md-4">
                             <label>&nbsp;</label>
                             <button type="submit" class="btn btn-primary btn-block">Filter</button>
+                        </div>
+                        <div class="col-md-4">
+                            <label>&nbsp;</label>
+                            <a href="{{ route('users.index') }}" class="btn btn-default btn-block">Reset</a>
                         </div>
                     </div>
                 </form>
@@ -70,10 +49,7 @@
                     <button id="bulk-delete-btn" class="btn btn-danger btn-sm mr-2" style="display:none;">
                         <i class="fas fa-trash"></i> Delete Selected
                     </button>
-                    <a href="{{ route('users.import') }}" class="btn btn-info btn-sm mr-2">
-                        <i class="fas fa-file-import"></i> Import Students
-                    </a>
-                    <a href="{{ route('users.create') }}" class="btn btn-success btn-sm">
+                    <a href="{{ route('users.create', ['role' => 'teacher']) }}" class="btn btn-success btn-sm">
                         <i class="fas fa-plus"></i> Add User
                     </a>
                 </div>
@@ -86,8 +62,7 @@
                             <th>Device ID</th>
                             <th>Name</th>
                             <th>Role</th>
-                            <th>Class / Section</th>
-                            <th>Shift</th>
+                            <th>Phone</th>
                             <th>Email</th>
                             <th>Actions</th>
                         </tr>
@@ -105,40 +80,40 @@
                             <td>
                                 @foreach($user->roles as $userRole)
                                     <span class="badge {{ $userRole->name == 'admin' ? 'badge-danger' : ($userRole->name == 'teacher' ? 'badge-primary' : 'badge-info') }}">
-                                        {{ ucfirst($userRole->name) }}
+                                        {{ ucfirst(str_replace('_', ' ', $userRole->name)) }}
                                     </span>
                                 @endforeach
                             </td>
-                            <td>
-                                @if($user->hasRole('student'))
-                                    {{ $user->schoolClass->name ?? '--' }} / {{ $user->section->name ?? '--' }}
-                                @else
-                                    --
-                                @endif
-                            </td>
-                            <td>{{ $user->shift ?? '--' }}</td>
+                            <td>{{ $user->phone ?? '--' }}</td>
                             <td>{{ $user->email }}</td>
                             <td>
-                                <a href="{{ route('users.edit', $user->id) }}" class="btn btn-info btn-sm">Edit</a>
+                                <a href="{{ route('users.edit', $user->id) }}" class="btn btn-info btn-sm action-btn" title="Edit" aria-label="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
                                 @if(auth()->user()->id !== $user->id)
                                 <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm delete-confirm" data-message="All attendance history for this user will be removed.">Delete</button>
+                                    <button type="submit" class="btn btn-danger btn-sm action-btn delete-confirm" title="Delete" aria-label="Delete" data-message="All attendance history for this user will be removed.">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </form>
                                 @endif
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center">No users found.</td>
+                            <td colspan="7" class="text-center">No users found.</td>
                         </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-            <div class="card-footer clearfix">
-                <div class="float-right">
+            <div class="card-footer table-list-footer">
+                <div>
+                    @include('partials.per-page')
+                </div>
+                <div>
                     {{ $users->appends(request()->query())->links() }}
                 </div>
             </div>

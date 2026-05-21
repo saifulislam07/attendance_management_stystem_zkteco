@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SchoolClass;
+use App\Support\TablePerPage;
 use Illuminate\Http\Request;
 
 class ClassController extends Controller
@@ -10,9 +11,9 @@ class ClassController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $classes = SchoolClass::paginate(10);
+        $classes = SchoolClass::paginate(TablePerPage::resolve($request));
         return view('classes.index', compact('classes'));
     }
 

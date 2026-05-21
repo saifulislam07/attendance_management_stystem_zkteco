@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TimeTable;
 use App\Models\SchoolClass;
+use App\Support\TablePerPage;
 use Illuminate\Http\Request;
 
 class TimeTableController extends Controller
@@ -11,9 +12,13 @@ class TimeTableController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $timetables = TimeTable::with('schoolClass')->orderBy('role')->orderBy('day')->get();
+        $timetables = TimeTable::with('schoolClass')
+            ->orderBy('role')
+            ->orderBy('day')
+            ->paginate(TablePerPage::resolve($request));
+
         return view('timetables.index', compact('timetables'));
     }
 

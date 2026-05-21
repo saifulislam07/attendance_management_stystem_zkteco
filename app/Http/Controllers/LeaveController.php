@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Leave;
 use App\Models\User;
+use App\Support\TablePerPage;
 use Illuminate\Http\Request;
 
 class LeaveController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $leaves = Leave::with('user')->orderBy('start_date', 'desc')->paginate(10);
+        $leaves = Leave::with('user')->orderBy('start_date', 'desc')->paginate(TablePerPage::resolve($request));
         return view('leaves.index', compact('leaves'));
     }
 

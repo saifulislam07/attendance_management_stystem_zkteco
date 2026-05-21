@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Holiday;
+use App\Support\TablePerPage;
 use Illuminate\Http\Request;
 
 class HolidayController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $holidays = Holiday::orderBy('date')->paginate(10);
+        $holidays = Holiday::orderBy('date')->paginate(TablePerPage::resolve($request));
         return view('holidays.index', compact('holidays'));
     }
 

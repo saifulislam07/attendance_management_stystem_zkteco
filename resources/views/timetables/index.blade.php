@@ -46,11 +46,15 @@
                             <td>{{ $timetable->grace_time ?? 0 }}</td>
                             <td>{{ $timetable->half_day_time ? \Carbon\Carbon::parse($timetable->half_day_time)->format('h:i A') : '--' }}</td>
                             <td>
-                                <a href="{{ route('timetables.edit', $timetable->id) }}" class="btn btn-sm btn-info">Edit</a>
+                                <a href="{{ route('timetables.edit', $timetable->id) }}" class="btn btn-sm btn-info action-btn" title="Edit" aria-label="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
                                 <form action="{{ route('timetables.destroy', $timetable->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this timetable?')">Delete</button>
+                                    <button type="submit" class="btn btn-sm btn-danger action-btn" title="Delete" aria-label="Delete" onclick="return confirm('Delete this timetable?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>
@@ -61,6 +65,14 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+            <div class="card-footer table-list-footer">
+                <div>
+                    @include('partials.per-page')
+                </div>
+                <div>
+                    {{ $timetables->appends(request()->query())->links() }}
+                </div>
             </div>
         </div>
     </div>

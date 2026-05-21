@@ -30,10 +30,12 @@
                             <td>{{ ucfirst($role->name) }}</td>
                             <td><span class="badge badge-info">{{ $role->permissions->count() }}</span></td>
                             <td>
-                                <a href="{{ route('roles.edit', $role->id) }}" class="btn btn-warning btn-xs"><i class="fas fa-edit"></i> Manage Permissions</a>
+                                <a href="{{ route('roles.edit', $role->id) }}" class="btn btn-warning btn-xs action-btn" title="Manage Permissions" aria-label="Manage Permissions">
+                                    <i class="fas fa-user-shield"></i>
+                                </a>
                                 <form action="{{ route('roles.destroy', $role->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this role?')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-xs"><i class="fas fa-trash"></i></button>
+                                    <button type="submit" class="btn btn-danger btn-xs action-btn" title="Delete" aria-label="Delete"><i class="fas fa-trash"></i></button>
                                 </form>
                             </td>
                         </tr>
@@ -41,9 +43,12 @@
                     </tbody>
                 </table>
             </div>
-            <div class="card-footer clearfix">
-                <div class="float-right">
-                    {{ $roles->links() }}
+            <div class="card-footer table-list-footer">
+                <div>
+                    @include('partials.per-page')
+                </div>
+                <div>
+                    {{ $roles->appends(request()->query())->links() }}
                 </div>
             </div>
         </div>

@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\TablePerPage;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 
 class PermissionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $permissions = Permission::paginate(10);
+        $permissions = Permission::paginate(TablePerPage::resolve($request));
         return view('permissions.index', compact('permissions'));
     }
 

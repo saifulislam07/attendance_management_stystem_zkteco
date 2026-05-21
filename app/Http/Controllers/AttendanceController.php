@@ -12,6 +12,7 @@ use App\Models\Section;
 use App\Models\Holiday;
 use App\Models\Leave;
 use App\Models\Device;
+use App\Support\TablePerPage;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -49,7 +50,7 @@ class AttendanceController extends Controller
             });
         }
 
-        $attendances = $query->paginate(10);
+        $attendances = $query->paginate(TablePerPage::resolve($request));
         $classes = SchoolClass::all();
         $sections = Section::all();
         $roles = Role::all();

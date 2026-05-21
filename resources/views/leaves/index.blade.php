@@ -46,12 +46,16 @@
                             </td>
                             <td>
                                 @if($leave->status == 'pending' && auth()->user()->role == 'admin')
-                                    <a href="{{ route('leaves.edit', $leave->id) }}" class="btn btn-info btn-sm">Review</a>
+                                    <a href="{{ route('leaves.edit', $leave->id) }}" class="btn btn-info btn-sm action-btn" title="Review" aria-label="Review">
+                                        <i class="fas fa-clipboard-check"></i>
+                                    </a>
                                 @endif
                                 <form action="{{ route('leaves.destroy', $leave->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Cancel/Delete this application?')">Delete</button>
+                                    <button type="submit" class="btn btn-danger btn-sm action-btn" title="Delete" aria-label="Delete" onclick="return confirm('Cancel/Delete this application?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>
@@ -63,9 +67,12 @@
                     </tbody>
                 </table>
             </div>
-            <div class="card-footer clearfix">
-                <div class="float-right">
-                    {{ $leaves->links() }}
+            <div class="card-footer table-list-footer">
+                <div>
+                    @include('partials.per-page')
+                </div>
+                <div>
+                    {{ $leaves->appends(request()->query())->links() }}
                 </div>
             </div>
         </div>

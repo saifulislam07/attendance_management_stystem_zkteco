@@ -13,9 +13,11 @@ use App\Http\Controllers\SectionController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\StudentImportController;
+use App\Http\Controllers\StudentController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\ProfileController;
 
 // Auth Routes
 Route::get('login', [AuthController::class, 'showLogin'])->name('login');
@@ -24,6 +26,9 @@ Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [DashboardController::class, 'index']);
+    Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
     // Admin Only - Core Structural Changes
     Route::middleware(['role:admin'])->group(function () {
@@ -43,9 +48,12 @@ Route::middleware(['auth'])->group(function () {
 
     // Admin + Accountant + Operator - User Management
     Route::middleware(['role:admin|accountant|operator'])->group(function () {
+        Route::get('students/import', [StudentImportController::class, 'show'])->name('students.import');
+        Route::post('students/import', [StudentImportController::class, 'import'])->name('students.import.process');
         Route::get('users/import', [StudentImportController::class, 'show'])->name('users.import');
         Route::post('users/import', [StudentImportController::class, 'import'])->name('users.import.process');
         Route::post('users/bulk-delete', [UserController::class, 'bulkDelete'])->name('users.bulk_delete');
+        Route::resource('students', StudentController::class);
         Route::resource('users', UserController::class);
     });
 

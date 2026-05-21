@@ -34,10 +34,20 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
             'role' => $this->faker->randomElement(['student', 'teacher', 'operator', 'accountant', 'office_boy', 'staff']),
             'device_user_id' => $this->faker->unique()->numberBetween(1000, 9999),
+            'admission_no' => null,
             'phone' => fake()->phoneNumber(),
             'shift' => $this->faker->randomElement(['Morning', 'Day']),
             'class_id' => null,
             'section_id' => null,
+            'roll_no' => null,
+            'date_of_birth' => null,
+            'gender' => null,
+            'blood_group' => null,
+            'guardian_name' => null,
+            'guardian_relation' => null,
+            'guardian_phone' => null,
+            'guardian_email' => null,
+            'address' => null,
         ];
     }
 

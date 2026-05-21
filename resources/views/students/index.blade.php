@@ -1,34 +1,19 @@
 @extends('layouts.admin')
 
-@section('title', 'Attendance Logs')
-@section('page_title', 'Attendance Logs')
+@section('title', 'Student List')
+@section('page_title', 'Students')
 
 @section('content')
 <div class="row">
     <div class="col-md-12">
         <div class="card card-primary card-outline">
             <div class="card-header">
-                <h3 class="card-title">Filter Logs</h3>
+                <h3 class="card-title">Filter Students</h3>
             </div>
             <div class="card-body">
-                <form action="{{ route('attendances.index') }}" method="GET">
+                <form action="{{ route('students.index') }}" method="GET">
                     <div class="row">
-                        <div class="col-md-2">
-                            <label>Date</label>
-                            <input type="date" name="date" class="form-control" value="{{ request('date', date('Y-m-d')) }}">
-                        </div>
                         <div class="col-md-3">
-                            <label>Role</label>
-                            <select name="role" class="form-control">
-                                <option value="">All Roles</option>
-                                @foreach($roles as $role)
-                                    <option value="{{ $role->name }}" {{ request('role') == $role->name ? 'selected' : '' }}>
-                                        {{ ucfirst(str_replace('_', ' ', $role->name)) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2">
                             <label>Class</label>
                             <select name="class_id" class="form-control">
                                 <option value="">All Classes</option>
@@ -37,7 +22,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <label>Section</label>
                             <select name="section_id" class="form-control">
                                 <option value="">All Sections</option>
@@ -47,8 +32,16 @@
                             </select>
                         </div>
                         <div class="col-md-3">
+                            <label>Shift</label>
+                            <select name="shift" class="form-control">
+                                <option value="">All Shifts</option>
+                                <option value="Morning" {{ request('shift') == 'Morning' ? 'selected' : '' }}>Morning</option>
+                                <option value="Day" {{ request('shift') == 'Day' ? 'selected' : '' }}>Day</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
                             <label>&nbsp;</label>
-                            <button type="submit" class="btn btn-primary btn-block">Filter Logs</button>
+                            <button type="submit" class="btn btn-primary btn-block">Filter</button>
                         </div>
                     </div>
                 </form>
@@ -58,71 +51,93 @@
 </div>
 
 <div class="row">
-    <div class="col-md-12">
+    <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Attendance Results</h3>
+                <h3 class="card-title">Student List</h3>
                 <div class="card-tools">
                     <button id="bulk-delete-btn" class="btn btn-danger btn-sm mr-2" style="display:none;">
                         <i class="fas fa-trash"></i> Delete Selected
                     </button>
-                    <a href="{{ route('attendances.create') }}" class="btn btn-warning btn-sm">
-                        <i class="fas fa-plus"></i> Manual Attendance
+                    <a href="{{ route('students.import') }}" class="btn btn-info btn-sm mr-2">
+                        <i class="fas fa-file-import"></i> Import Students
+                    </a>
+                    <a href="{{ route('students.create') }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus"></i> Add Student
                     </a>
                 </div>
             </div>
             <div class="card-body table-responsive p-0">
-                <table class="table table-hover text-nowrap" id="attendance-table">
+                <table class="table table-hover text-nowrap" id="students-table">
                     <thead>
                         <tr>
                             <th width="40"><input type="checkbox" id="select-all"></th>
-                            <th>Date</th>
+                            <th>Photo</th>
+                            <th>Roll No</th>
+                            <th>Admission No</th>
+                            <th>Device ID</th>
                             <th>Name</th>
-                            <th>Role</th>
                             <th>Class / Section</th>
-                            <th>Check-in</th>
-                            <th>Check-out</th>
-                            <th>Status</th>
-                            <th>Early Leave</th>
+                            <th>Shift</th>
+                            <th>Guardian</th>
+                            <th>Contact</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($attendances as $attendance)
-                        <tr>
-                            <td><input type="checkbox" class="log-checkbox" value="{{ $attendance->id }}"></td>
-                            <td>{{ \Carbon\Carbon::parse($attendance->date)->format('d M Y') }}</td>
-                            <td>{{ $attendance->user->name }}</td>
+                        @forelse($users as $user)
+                        <tr id="user-row-{{ $user->id }}">
                             <td>
-                                @foreach($attendance->user->roles as $userRole)
-                                    <span class="badge badge-secondary">{{ ucfirst($userRole->name) }}</span>
-                                @endforeach
+                                @if(auth()->id() !== $user->id)
+                                    <input type="checkbox" class="user-checkbox" value="{{ $user->id }}">
+                                @endif
                             </td>
                             <td>
-                                {{ $attendance->user->schoolClass->name ?? '--' }} / 
-                                {{ $attendance->user->section->name ?? '--' }}
-                            </td>
-                            <td>{{ $attendance->check_in ? \Carbon\Carbon::parse($attendance->check_in)->format('h:i A') : '--' }}</td>
-                            <td>{{ $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out)->format('h:i A') : '--' }}</td>
-                            <td>
-                                <span class="badge 
-                                    {{ $attendance->status == 'Present' ? 'badge-success' : 
-                                       ($attendance->status == 'Late' ? 'badge-warning' : 
-                                       ($attendance->status == 'Half Day' ? 'badge-info' : 
-                                       ($attendance->status == 'Missing Punch' ? 'badge-dark' : 'badge-danger'))) }}">
-                                    {{ $attendance->status }}
-                                </span>
-                            </td>
-                            <td>
-                                @if($attendance->early_leave)
-                                    <span class="badge badge-warning">Yes</span>
+                                @if($user->photo)
+                                    <img src="{{ asset('storage/' . $user->photo) }}" alt="{{ $user->name }}" class="img-circle" style="width: 38px; height: 38px; object-fit: cover;">
                                 @else
-                                    <span class="badge badge-success">No</span>
+                                    <i class="fas fa-user-circle fa-2x text-muted"></i>
+                                @endif
+                            </td>
+                            <td><span class="badge badge-primary">{{ $user->roll_no ?? '--' }}</span></td>
+                            <td>{{ $user->admission_no ?? '--' }}</td>
+                            <td><code>{{ $user->device_user_id }}</code></td>
+                            <td>{{ $user->name }}</td>
+                            <td>{{ $user->schoolClass->name ?? '--' }} / {{ $user->section->name ?? '--' }}</td>
+                            <td>{{ $user->shift ?? '--' }}</td>
+                            <td>
+                                {{ $user->guardian_name ?? '--' }}
+                                @if($user->guardian_relation)
+                                    <small class="text-muted d-block">{{ $user->guardian_relation }}</small>
+                                @endif
+                            </td>
+                            <td>
+                                {{ $user->guardian_phone ?? '--' }}
+                                @if($user->guardian_email)
+                                    <small class="text-muted d-block">{{ $user->guardian_email }}</small>
+                                @endif
+                            </td>
+                            <td>
+                                <a href="{{ route('students.show', $user->id) }}" class="btn btn-primary btn-sm action-btn" title="View" aria-label="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ route('students.edit', $user->id) }}" class="btn btn-info btn-sm action-btn" title="Edit" aria-label="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                @if(auth()->user()->id !== $user->id)
+                                <form action="{{ route('students.destroy', $user->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-sm action-btn delete-confirm" title="Delete" aria-label="Delete" data-message="All attendance history for this student will be removed.">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                                 @endif
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="9" class="text-center text-muted">No attendance records found for selected filters.</td>
+                            <td colspan="11" class="text-center">No students found.</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -133,7 +148,7 @@
                     @include('partials.per-page')
                 </div>
                 <div>
-                    {{ $attendances->appends(request()->query())->links() }}
+                    {{ $users->appends(request()->query())->links() }}
                 </div>
             </div>
         </div>
@@ -144,11 +159,11 @@
 <script>
 $(function() {
     const selectAll = $('#select-all');
-    const checkboxes = $('.log-checkbox');
+    const checkboxes = $('.user-checkbox');
     const bulkBtn = $('#bulk-delete-btn');
 
     function toggleBulkBtn() {
-        const checkedCount = $('.log-checkbox:checked').length;
+        const checkedCount = $('.user-checkbox:checked').length;
         if (checkedCount > 0) {
             bulkBtn.fadeIn();
             bulkBtn.html(`<i class="fas fa-trash"></i> Delete Selected (${checkedCount})`);
@@ -171,7 +186,7 @@ $(function() {
 
     bulkBtn.on('click', function() {
         const ids = [];
-        $('.log-checkbox:checked').each(function() {
+        $('.user-checkbox:checked').each(function() {
             ids.push($(this).val());
         });
 
@@ -179,7 +194,7 @@ $(function() {
 
         Swal.fire({
             title: 'Are you sure?',
-            text: `You want to delete ${ids.length} selected logs? This action cannot be undone.`,
+            text: `You want to delete ${ids.length} selected students? This will also remove their attendance history.`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
@@ -191,7 +206,7 @@ $(function() {
                 bulkBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Deleting...');
 
                 $.ajax({
-                    url: "{{ route('attendances.bulk_delete') }}",
+                    url: "{{ route('users.bulk_delete') }}",
                     method: "POST",
                     data: {
                         _token: "{{ csrf_token() }}",

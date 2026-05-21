@@ -22,7 +22,7 @@
                             <div class="bg-light text-right p-1">
                                 <form action="{{ route('permissions.destroy', $permission->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this permission?')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-xs text-danger"><i class="fas fa-trash"></i></button>
+                                    <button type="submit" class="btn btn-xs text-danger action-btn" title="Delete" aria-label="Delete"><i class="fas fa-trash"></i></button>
                                 </form>
                             </div>
                         </div>
@@ -30,9 +30,12 @@
                     @endforeach
                 </div>
             </div>
-            <div class="card-footer clearfix">
-                <div class="float-right">
-                    {{ $permissions->links() }}
+            <div class="card-footer table-list-footer">
+                <div>
+                    @include('partials.per-page')
+                </div>
+                <div>
+                    {{ $permissions->appends(request()->query())->links() }}
                 </div>
             </div>
         </div>

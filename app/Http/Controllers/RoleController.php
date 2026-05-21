@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\TablePerPage;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
 class RoleController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $roles = Role::with('permissions')->paginate(10);
+        $roles = Role::with('permissions')->paginate(TablePerPage::resolve($request));
         return view('roles.index', compact('roles'));
     }
 

@@ -37,11 +37,15 @@
                             <td>{{ $section->name }}</td>
                             <td>{{ $section->schoolClass->name ?? '--' }}</td>
                             <td>
-                                <a href="{{ route('sections.edit', $section->id) }}" class="btn btn-info btn-sm">Edit</a>
+                                <a href="{{ route('sections.edit', $section->id) }}" class="btn btn-info btn-sm action-btn" title="Edit" aria-label="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
                                 <form action="{{ route('sections.destroy', $section->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm delete-confirm">Delete</button>
+                                    <button type="submit" class="btn btn-danger btn-sm action-btn delete-confirm" title="Delete" aria-label="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>
@@ -53,9 +57,12 @@
                     </tbody>
                 </table>
             </div>
-            <div class="card-footer clearfix">
-                <div class="float-right">
-                    {{ $sections->links() }}
+            <div class="card-footer table-list-footer">
+                <div>
+                    @include('partials.per-page')
+                </div>
+                <div>
+                    {{ $sections->appends(request()->query())->links() }}
                 </div>
             </div>
         </div>
