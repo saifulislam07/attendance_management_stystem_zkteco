@@ -11,6 +11,7 @@
                 <a href="{{ route('permissions.create') }}" class="btn btn-info btn-sm"><i class="fas fa-plus"></i> Add New Permission</a>
             </div>
             <div class="card-body">
+                @include('partials.table-search', ['placeholder' => 'Search permission...'])
                 <div class="row">
                     @foreach($permissions as $permission)
                     <div class="col-md-3 mb-2">
@@ -31,10 +32,10 @@
                 </div>
             </div>
             <div class="card-footer table-list-footer">
-                <div>
+                <div class="pagination-wrap">
                     @include('partials.per-page')
                 </div>
-                <div>
+                <div class="pagination-wrap">
                     {{ $permissions->appends(request()->query())->links() }}
                 </div>
             </div>

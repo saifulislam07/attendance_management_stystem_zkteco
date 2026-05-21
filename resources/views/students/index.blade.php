@@ -14,6 +14,10 @@
                 <form action="{{ route('students.index') }}" method="GET">
                     <div class="row">
                         <div class="col-md-3">
+                            <label>Search</label>
+                            <input type="search" name="q" class="form-control" value="{{ request('q') }}" placeholder="Name, roll, admission, device ID">
+                        </div>
+                        <div class="col-md-3">
                             <label>Class</label>
                             <select name="class_id" class="form-control">
                                 <option value="">All Classes</option>
@@ -144,10 +148,10 @@
                 </table>
             </div>
             <div class="card-footer table-list-footer">
-                <div>
+                <div class="pagination-wrap">
                     @include('partials.per-page')
                 </div>
-                <div>
+                <div class="pagination-wrap">
                     {{ $users->appends(request()->query())->links() }}
                 </div>
             </div>

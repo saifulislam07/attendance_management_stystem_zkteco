@@ -14,6 +14,10 @@
                 <form action="{{ route('reports.monthly') }}" method="GET">
                     <div class="row">
                         <div class="col-md-3">
+                            <label>Search</label>
+                            <input type="search" name="q" class="form-control" value="{{ request('q') }}" placeholder="Name, device ID, class">
+                        </div>
+                        <div class="col-md-2">
                             <label>Month</label>
                             <select name="month" class="form-control">
                                 @for($i = 1; $i <= 12; $i++)
@@ -23,7 +27,7 @@
                                 @endfor
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label>Year</label>
                             <select name="year" class="form-control">
                                 @for($i = date('Y') - 2; $i <= date('Y') + 1; $i++)
@@ -31,9 +35,28 @@
                                 @endfor
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-2">
+                            <label>Role</label>
+                            <select name="role" class="form-control">
+                                <option value="">All Roles</option>
+                                <option value="teacher" {{ request('role') == 'teacher' ? 'selected' : '' }}>Teacher</option>
+                                <option value="student" {{ request('role') == 'student' ? 'selected' : '' }}>Student</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label>Class</label>
+                            <select name="class_id" class="form-control">
+                                <option value="">All Classes</option>
+                                @foreach($classes as $class)
+                                    <option value="{{ $class->id }}" {{ request('class_id') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-1">
                             <label>&nbsp;</label>
-                            <button type="submit" class="btn btn-primary btn-block">Generate Monthly Report</button>
+                            <button type="submit" class="btn btn-primary btn-block" title="Generate">
+                                <i class="fas fa-filter"></i>
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -67,7 +90,7 @@
                             <th>Half Day</th>
                             <th>Missing</th>
                             <th>Leave</th>
-                            <th>Growth</th>
+                            <th>Attendance %</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -89,11 +112,7 @@
                             <td>{{ $user->monthly_stats->missing }}</td>
                             <td>{{ $user->monthly_stats->leave }}</td>
                             <td>
-                                @php
-                                    $percent = $user->monthly_stats->total_days > 0 
-                                               ? round(($user->monthly_stats->present / $user->monthly_stats->total_days) * 100) 
-                                               : 0;
-                                @endphp
+                                @php $percent = $user->monthly_stats->attendance_percent; @endphp
                                 <div class="progress progress-xs">
                                     <div class="progress-bar {{ $percent > 80 ? 'bg-success' : 'bg-danger' }}" style="width: {{ $percent }}%"></div>
                                 </div>

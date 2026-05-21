@@ -14,10 +14,14 @@
                 <form action="{{ route('reports.index') }}" method="GET">
                     <div class="row">
                         <div class="col-md-3">
+                            <label>Search</label>
+                            <input type="search" name="q" class="form-control" value="{{ request('q') }}" placeholder="Name, device ID, class">
+                        </div>
+                        <div class="col-md-2">
                             <label>Start Date</label>
                             <input type="date" name="start_date" class="form-control" value="{{ $startDate }}">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label>End Date</label>
                             <input type="date" name="end_date" class="form-control" value="{{ $endDate }}">
                         </div>
@@ -38,9 +42,11 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-1">
                             <label>&nbsp;</label>
-                            <button type="submit" class="btn btn-primary btn-block">Generate Report</button>
+                            <button type="submit" class="btn btn-primary btn-block" title="Generate">
+                                <i class="fas fa-filter"></i>
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -50,6 +56,15 @@
 </div>
 
 <div class="row">
+    <div class="col-12 col-sm-6 col-md-2">
+        <div class="info-box mb-3">
+            <span class="info-box-icon bg-primary elevation-1"><i class="fas fa-percentage"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Attendance</span>
+                <span class="info-box-number">{{ $stats['attendance_percent'] }}%</span>
+            </div>
+        </div>
+    </div>
     <div class="col-12 col-sm-6 col-md-2">
         <div class="info-box mb-3">
             <span class="info-box-icon bg-success elevation-1"><i class="fas fa-user-check"></i></span>
@@ -99,7 +114,7 @@
     </div>
     <div class="col-12 col-sm-6 col-md-2">
         <div class="info-box mb-3">
-            <span class="info-box-icon bg-primary elevation-1"><i class="fas fa-sign-out-alt"></i></span>
+            <span class="info-box-icon bg-secondary elevation-1"><i class="fas fa-sign-out-alt"></i></span>
             <div class="info-box-content">
                 <span class="info-box-text">Leave</span>
                 <span class="info-box-number">{{ $stats['leave'] }}</span>
@@ -138,12 +153,16 @@
                         <tr>
                             <td>{{ $attendance->date }}</td>
                             <td>
-                                <a href="{{ route('reports.individual', $attendance->user->id) }}">
-                                    {{ $attendance->user->name }}
-                                </a>
+                                @if($attendance->user)
+                                    <a href="{{ route('reports.individual', $attendance->user->id) }}">
+                                        {{ $attendance->user->name }}
+                                    </a>
+                                @else
+                                    Unknown User
+                                @endif
                             </td>
-                            <td>{{ ucfirst($attendance->user->role) }}</td>
-                            <td>{{ $attendance->user->schoolClass->name ?? '--' }} / {{ $attendance->user->section->name ?? '--' }}</td>
+                            <td>{{ ucfirst(optional($attendance->user)->role ?? '--') }}</td>
+                            <td>{{ optional(optional($attendance->user)->schoolClass)->name ?? '--' }} / {{ optional(optional($attendance->user)->section)->name ?? '--' }}</td>
                             <td>{{ $attendance->check_in ? \Carbon\Carbon::parse($attendance->check_in)->format('h:i A') : '--' }}</td>
                             <td>{{ $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out)->format('h:i A') : '--' }}</td>
                             <td>

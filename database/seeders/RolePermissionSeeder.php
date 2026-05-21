@@ -46,12 +46,12 @@ class RolePermissionSeeder extends Seeder
         // Create Roles and Assign Permissions
         $roles = [
             'admin' => $permissions,
-            'teacher' => ['view-attendance', 'view-reports', 'view-classes', 'view-sections', 'manage-leaves'],
-            'student' => ['view-attendance'],
+            'teacher' => ['view-attendance', 'view-reports', 'view-classes', 'view-sections'],
+            'student' => [],
             'operator' => ['manage-attendance', 'view-users', 'manage-users', 'view-attendance'],
-            'accountant' => ['view-users', 'view-reports', 'manage-leaves', 'view-holidays'],
-            'office_boy' => ['view-attendance'],
-            'staff' => ['view-attendance'],
+            'accountant' => ['view-users', 'view-reports', 'view-leaves', 'manage-leaves', 'view-holidays'],
+            'office_boy' => [],
+            'staff' => [],
         ];
         
         foreach ($roles as $roleName => $rolePermissions) {

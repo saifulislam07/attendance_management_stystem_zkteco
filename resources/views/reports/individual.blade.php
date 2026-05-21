@@ -35,6 +35,14 @@
 {{-- Summary Dashboard --}}
 <div class="row">
     <div class="col-lg-2 col-4">
+        <div class="small-box bg-primary">
+            <div class="inner">
+                <h3>{{ $stats['attendance_percent'] }}%</h3>
+                <p>Attendance</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-4">
         <div class="small-box bg-success">
             <div class="inner">
                 <h3>{{ $stats['present'] }}</h3>

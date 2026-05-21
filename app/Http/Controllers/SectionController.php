@@ -11,7 +11,17 @@ class SectionController extends Controller
 {
     public function index(Request $request)
     {
-        $sections = Section::with('schoolClass')->paginate(TablePerPage::resolve($request));
+        $query = Section::with('schoolClass');
+
+        if ($request->filled('q')) {
+            $search = trim($request->q);
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhereHas('schoolClass', fn ($classQuery) => $classQuery->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $sections = $query->paginate(TablePerPage::resolve($request));
         return view('sections.index', compact('sections'));
     }
 

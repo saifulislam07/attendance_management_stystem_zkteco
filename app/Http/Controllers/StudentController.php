@@ -30,6 +30,20 @@ class StudentController extends Controller
             $query->where('shift', $request->shift);
         }
 
+        if ($request->filled('q')) {
+            $search = trim($request->q);
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('device_user_id', 'like', "%{$search}%")
+                    ->orWhere('admission_no', 'like', "%{$search}%")
+                    ->orWhere('roll_no', 'like', "%{$search}%")
+                    ->orWhere('guardian_name', 'like', "%{$search}%")
+                    ->orWhere('guardian_phone', 'like', "%{$search}%")
+                    ->orWhereHas('schoolClass', fn ($classQuery) => $classQuery->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('section', fn ($sectionQuery) => $sectionQuery->where('name', 'like', "%{$search}%"));
+            });
+        }
+
         $users = $query->latest()->paginate(TablePerPage::resolve($request));
         $classes = SchoolClass::all();
         $sections = Section::all();

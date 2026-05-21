@@ -33,13 +33,13 @@ Route::middleware(['auth'])->group(function () {
     // Admin Only - Core Structural Changes
     Route::middleware(['role:admin'])->group(function () {
         Route::post('classes/bulk-delete', [ClassController::class, 'bulkDelete'])->name('classes.bulk_delete');
-        Route::resource('classes', ClassController::class);
+        Route::resource('classes', ClassController::class)->except(['show']);
         Route::post('sections/bulk-delete', [SectionController::class, 'bulkDelete'])->name('sections.bulk_delete');
-        Route::resource('sections', SectionController::class);
-        Route::resource('timetables', TimeTableController::class);
-        Route::resource('devices', DeviceController::class);
-        Route::resource('roles', RoleController::class);
-        Route::resource('permissions', PermissionController::class);
+        Route::resource('sections', SectionController::class)->except(['show']);
+        Route::resource('timetables', TimeTableController::class)->except(['show']);
+        Route::resource('devices', DeviceController::class)->except(['show']);
+        Route::resource('roles', RoleController::class)->except(['show']);
+        Route::resource('permissions', PermissionController::class)->except(['show']);
 
         // System Settings
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
@@ -49,18 +49,20 @@ Route::middleware(['auth'])->group(function () {
     // Admin + Accountant + Operator - User Management
     Route::middleware(['role:admin|accountant|operator'])->group(function () {
         Route::get('students/import', [StudentImportController::class, 'show'])->name('students.import');
+        Route::get('students/import/demo', [StudentImportController::class, 'downloadDemo'])->name('students.import.demo');
         Route::post('students/import', [StudentImportController::class, 'import'])->name('students.import.process');
         Route::get('users/import', [StudentImportController::class, 'show'])->name('users.import');
+        Route::get('users/import/demo', [StudentImportController::class, 'downloadDemo'])->name('users.import.demo');
         Route::post('users/import', [StudentImportController::class, 'import'])->name('users.import.process');
         Route::post('users/bulk-delete', [UserController::class, 'bulkDelete'])->name('users.bulk_delete');
         Route::resource('students', StudentController::class);
-        Route::resource('users', UserController::class);
+        Route::resource('users', UserController::class)->except(['show']);
     });
 
     // Admin + Accountant - HR/Scheduler
     Route::middleware(['role:admin|accountant'])->group(function () {
-        Route::resource('holidays', HolidayController::class);
-        Route::resource('leaves', LeaveController::class);
+        Route::resource('holidays', HolidayController::class)->except(['show']);
+        Route::resource('leaves', LeaveController::class)->except(['show']);
     });
 
     // Admin + Teacher + Accountant - Reports
@@ -73,9 +75,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('reports/individual/{user}/export', [ReportController::class, 'individualExport'])->name('reports.individual.export');
     });
 
-    // Admin + Operator + Teacher - Attendance Ops
+    // Admin + Operator + Teacher - Attendance viewing
     Route::middleware(['role:admin|operator|teacher'])->group(function () {
         Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');
+    });
+
+    // Admin + Operator - Attendance operations
+    Route::middleware(['role:admin|operator'])->group(function () {
         Route::get('attendances/create', [AttendanceController::class, 'create'])->name('attendances.create');
         Route::post('attendances', [AttendanceController::class, 'store'])->name('attendances.store');
         Route::post('attendances/bulk-delete', [AttendanceController::class, 'bulkDelete'])->name('attendances.bulk_delete');

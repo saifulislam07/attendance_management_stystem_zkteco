@@ -13,7 +13,14 @@ class ClassController extends Controller
      */
     public function index(Request $request)
     {
-        $classes = SchoolClass::paginate(TablePerPage::resolve($request));
+        $query = SchoolClass::query();
+
+        if ($request->filled('q')) {
+            $search = trim($request->q);
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $classes = $query->paginate(TablePerPage::resolve($request));
         return view('classes.index', compact('classes'));
     }
 

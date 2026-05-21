@@ -14,10 +14,23 @@ class TimeTableController extends Controller
      */
     public function index(Request $request)
     {
-        $timetables = TimeTable::with('schoolClass')
+        $query = TimeTable::with('schoolClass')
             ->orderBy('role')
-            ->orderBy('day')
-            ->paginate(TablePerPage::resolve($request));
+            ->orderBy('day');
+
+        if ($request->filled('q')) {
+            $search = trim($request->q);
+            $query->where(function ($q) use ($search) {
+                $q->where('role', 'like', "%{$search}%")
+                    ->orWhere('day', 'like', "%{$search}%")
+                    ->orWhere('in_time', 'like', "%{$search}%")
+                    ->orWhere('late_time', 'like', "%{$search}%")
+                    ->orWhere('out_time', 'like', "%{$search}%")
+                    ->orWhereHas('schoolClass', fn ($classQuery) => $classQuery->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $timetables = $query->paginate(TablePerPage::resolve($request));
 
         return view('timetables.index', compact('timetables'));
     }

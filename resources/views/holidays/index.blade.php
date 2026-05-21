@@ -15,6 +15,9 @@
                     </a>
                 </div>
             </div>
+            <div class="card-body">
+                @include('partials.table-search', ['placeholder' => 'Search holiday title or date...'])
+            </div>
             <div class="card-body table-responsive p-0">
                 <table class="table table-hover text-nowrap">
                     <thead>
@@ -53,10 +56,10 @@
                 </table>
             </div>
             <div class="card-footer table-list-footer">
-                <div>
+                <div class="pagination-wrap">
                     @include('partials.per-page')
                 </div>
-                <div>
+                <div class="pagination-wrap">
                     {{ $holidays->appends(request()->query())->links() }}
                 </div>
             </div>

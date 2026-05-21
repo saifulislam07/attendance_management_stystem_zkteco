@@ -10,7 +10,14 @@ class PermissionController extends Controller
 {
     public function index(Request $request)
     {
-        $permissions = Permission::paginate(TablePerPage::resolve($request));
+        $query = Permission::query();
+
+        if ($request->filled('q')) {
+            $search = trim($request->q);
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $permissions = $query->paginate(TablePerPage::resolve($request));
         return view('permissions.index', compact('permissions'));
     }
 

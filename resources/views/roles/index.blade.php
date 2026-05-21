@@ -13,6 +13,9 @@
                     <a href="{{ route('roles.create') }}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Add New Role</a>
                 </div>
             </div>
+            <div class="card-body">
+                @include('partials.table-search', ['placeholder' => 'Search role or permission...'])
+            </div>
             <div class="card-body table-responsive p-0">
                 <table class="table table-hover text-nowrap">
                     <thead>
@@ -44,10 +47,10 @@
                 </table>
             </div>
             <div class="card-footer table-list-footer">
-                <div>
+                <div class="pagination-wrap">
                     @include('partials.per-page')
                 </div>
-                <div>
+                <div class="pagination-wrap">
                     {{ $roles->appends(request()->query())->links() }}
                 </div>
             </div>

@@ -11,7 +11,21 @@ class LeaveController extends Controller
 {
     public function index(Request $request)
     {
-        $leaves = Leave::with('user')->orderBy('start_date', 'desc')->paginate(TablePerPage::resolve($request));
+        $query = Leave::with('user')->orderBy('start_date', 'desc');
+
+        if ($request->filled('q')) {
+            $search = trim($request->q);
+            $query->where(function ($q) use ($search) {
+                $q->where('type', 'like', "%{$search}%")
+                    ->orWhere('reason', 'like', "%{$search}%")
+                    ->orWhere('status', 'like', "%{$search}%")
+                    ->orWhere('start_date', 'like', "%{$search}%")
+                    ->orWhere('end_date', 'like', "%{$search}%")
+                    ->orWhereHas('user', fn ($userQuery) => $userQuery->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $leaves = $query->paginate(TablePerPage::resolve($request));
         return view('leaves.index', compact('leaves'));
     }
 

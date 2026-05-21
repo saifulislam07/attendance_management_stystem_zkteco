@@ -13,11 +13,22 @@
             <div class="card-body">
                 <form action="{{ route('attendances.index') }}" method="GET">
                     <div class="row">
+                        <div class="col-md-3">
+                            <label>Search</label>
+                            <div class="input-group">
+                                <input type="search" name="q" class="form-control" value="{{ request('q') }}" placeholder="Name, device ID, class, status">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="submit" title="Search">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                         <div class="col-md-2">
                             <label>Date</label>
                             <input type="date" name="date" class="form-control" value="{{ request('date', date('Y-m-d')) }}">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label>Role</label>
                             <select name="role" class="form-control">
                                 <option value="">All Roles</option>
@@ -46,11 +57,20 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-1">
                             <label>&nbsp;</label>
-                            <button type="submit" class="btn btn-primary btn-block">Filter Logs</button>
+                            <button type="submit" class="btn btn-primary btn-block" title="Filter">
+                                <i class="fas fa-filter"></i>
+                            </button>
                         </div>
                     </div>
+                    @if(request()->hasAny(['q', 'date', 'role', 'class_id', 'section_id']))
+                        <div class="mt-3">
+                            <a href="{{ route('attendances.index') }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-times mr-1"></i> Clear Search
+                            </a>
+                        </div>
+                    @endif
                 </form>
             </div>
         </div>
@@ -62,6 +82,9 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">Attendance Results</h3>
+                @if(request('q'))
+                    <span class="badge badge-info ml-2">Search: {{ request('q') }}</span>
+                @endif
                 <div class="card-tools">
                     <button id="bulk-delete-btn" class="btn btn-danger btn-sm mr-2" style="display:none;">
                         <i class="fas fa-trash"></i> Delete Selected
@@ -129,10 +152,10 @@
                 </table>
             </div>
             <div class="card-footer table-list-footer">
-                <div>
+                <div class="pagination-wrap">
                     @include('partials.per-page')
                 </div>
-                <div>
+                <div class="pagination-wrap">
                     {{ $attendances->appends(request()->query())->links() }}
                 </div>
             </div>

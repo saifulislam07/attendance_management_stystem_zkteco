@@ -10,7 +10,19 @@ class DeviceController extends Controller
 {
     public function index(Request $request)
     {
-        $devices = Device::latest()->paginate(TablePerPage::resolve($request));
+        $query = Device::latest();
+
+        if ($request->filled('q')) {
+            $search = trim($request->q);
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('ip_address', 'like', "%{$search}%")
+                    ->orWhere('port', 'like', "%{$search}%")
+                    ->orWhere('location', 'like', "%{$search}%");
+            });
+        }
+
+        $devices = $query->paginate(TablePerPage::resolve($request));
         return view('devices.index', compact('devices'));
     }
 

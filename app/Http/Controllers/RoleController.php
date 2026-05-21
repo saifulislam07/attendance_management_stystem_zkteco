@@ -11,7 +11,15 @@ class RoleController extends Controller
 {
     public function index(Request $request)
     {
-        $roles = Role::with('permissions')->paginate(TablePerPage::resolve($request));
+        $query = Role::with('permissions');
+
+        if ($request->filled('q')) {
+            $search = trim($request->q);
+            $query->where('name', 'like', "%{$search}%")
+                ->orWhereHas('permissions', fn ($permissionQuery) => $permissionQuery->where('name', 'like', "%{$search}%"));
+        }
+
+        $roles = $query->paginate(TablePerPage::resolve($request));
         return view('roles.index', compact('roles'));
     }
 

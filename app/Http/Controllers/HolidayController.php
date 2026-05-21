@@ -10,7 +10,17 @@ class HolidayController extends Controller
 {
     public function index(Request $request)
     {
-        $holidays = Holiday::orderBy('date')->paginate(TablePerPage::resolve($request));
+        $query = Holiday::orderBy('date');
+
+        if ($request->filled('q')) {
+            $search = trim($request->q);
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('date', 'like', "%{$search}%");
+            });
+        }
+
+        $holidays = $query->paginate(TablePerPage::resolve($request));
         return view('holidays.index', compact('holidays'));
     }
 

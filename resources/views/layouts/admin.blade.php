@@ -34,13 +34,46 @@
       }
       .table-list-footer {
         display: flex;
-        align-items: center;
+        align-items: stretch;
         justify-content: space-between;
         gap: 1rem;
         flex-wrap: wrap;
+        overflow: hidden;
+      }
+      .table-list-footer > div {
+        max-width: 100%;
+        min-width: 0;
       }
       .per-page-form {
+        display: inline-flex;
+        align-items: center;
         gap: .35rem;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+        width: auto;
+      }
+      .per-page-form .form-control {
+        width: 74px;
+        min-width: 74px;
+        max-width: 74px;
+      }
+      .pagination-wrap {
+        display: block;
+        flex: 0 1 auto;
+        width: auto;
+        max-width: 100%;
+        min-width: 0;
+      }
+      .pagination-wrap .pagination {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .25rem;
+        margin-bottom: 0;
+      }
+      .pagination-wrap .page-link {
+        min-width: 34px;
+        text-align: center;
+        border-radius: .2rem;
       }
       @media (max-width: 767.98px) {
         .content-header h1 { font-size: 1.45rem; }
@@ -56,11 +89,18 @@
           margin: 0 2px 2px 0;
         }
         .table-list-footer {
-          align-items: stretch;
           flex-direction: column;
+        }
+        .pagination-wrap {
+          flex: 0 0 auto;
+          width: 100%;
         }
         .per-page-form {
           justify-content: flex-start;
+        }
+        .per-page-form .form-control {
+          width: 74px;
+          min-width: 74px;
         }
         .table { font-size: .875rem; }
         .table td, .table th { vertical-align: middle; }
@@ -250,15 +290,25 @@
           @endif
 
           {{-- Attendance --}}
-          @can('view-attendance')
+          @if(auth()->user()->can('view-attendance') || auth()->user()->can('manage-attendance'))
           <li class="nav-header">ATTENDANCE</li>
+          @can('view-attendance')
           <li class="nav-item">
-            <a href="{{ route('attendances.index') }}" class="nav-link {{ request()->is('attendances*') ? 'active' : '' }}">
+            <a href="{{ route('attendances.index') }}" class="nav-link {{ request()->is('attendances') ? 'active' : '' }}">
               <i class="nav-icon fas fa-clipboard-list"></i>
               <p>Logs</p>
             </a>
           </li>
           @endcan
+          @can('manage-attendance')
+          <li class="nav-item">
+            <a href="{{ route('attendances.create') }}" class="nav-link {{ request()->is('attendances/create') ? 'active' : '' }}">
+              <i class="nav-icon fas fa-keyboard"></i>
+              <p>Manual Entry</p>
+            </a>
+          </li>
+          @endcan
+          @endif
           
           {{-- Reports --}}
           @can('view-reports')

@@ -50,6 +50,29 @@ class AttendanceController extends Controller
             });
         }
 
+        if ($request->filled('q')) {
+            $search = trim($request->q);
+
+            $query->where(function ($attendanceQuery) use ($search) {
+                $attendanceQuery
+                    ->where('status', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('device_user_id', 'like', "%{$search}%")
+                            ->orWhere('admission_no', 'like', "%{$search}%")
+                            ->orWhere('role', 'like', "%{$search}%")
+                            ->orWhereHas('schoolClass', function ($classQuery) use ($search) {
+                                $classQuery->where('name', 'like', "%{$search}%");
+                            })
+                            ->orWhereHas('section', function ($sectionQuery) use ($search) {
+                                $sectionQuery->where('name', 'like', "%{$search}%");
+                            });
+                    });
+            });
+        }
+
         $attendances = $query->paginate(TablePerPage::resolve($request));
         $classes = SchoolClass::all();
         $sections = Section::all();
@@ -63,8 +86,13 @@ class AttendanceController extends Controller
      */
     public function create()
     {
-        $users = User::all();
-        return view('attendances.create', compact('users'));
+        $users = User::with(['schoolClass', 'section'])
+            ->whereIn('role', ['student', 'teacher'])
+            ->orderBy('name')
+            ->get();
+        $timeOptions = $this->timeOptions();
+
+        return view('attendances.create', compact('users', 'timeOptions'));
     }
 
     /**
@@ -72,7 +100,7 @@ class AttendanceController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'date' => 'required|date',
             'check_in' => 'nullable',
@@ -81,8 +109,8 @@ class AttendanceController extends Controller
         ]);
 
         Attendance::updateOrCreate(
-            ['user_id' => $request->user_id, 'date' => $request->date],
-            $request->all()
+            ['user_id' => $validated['user_id'], 'date' => $validated['date']],
+            $validated
         );
 
         return redirect()->route('attendances.index')->with('success', 'Manual attendance recorded.');
@@ -341,6 +369,20 @@ class AttendanceController extends Controller
         $providedToken = $request->bearerToken() ?: $request->header('X-Sync-Token');
 
         return is_string($providedToken) && hash_equals($token, $providedToken);
+    }
+
+    private function timeOptions(): array
+    {
+        $options = [];
+        $time = Carbon::createFromTime(6, 0);
+        $end = Carbon::createFromTime(22, 0);
+
+        while ($time->lte($end)) {
+            $options[$time->format('H:i')] = $time->format('h:i A');
+            $time->addMinutes(5);
+        }
+
+        return $options;
     }
 
     private function resolveDevice(Request $request): ?Device

@@ -14,6 +14,10 @@
                 <form action="{{ route('users.index') }}" method="GET">
                     <div class="row">
                         <div class="col-md-4">
+                            <label>Search</label>
+                            <input type="search" name="q" class="form-control" value="{{ request('q') }}" placeholder="Name, email, phone, device ID">
+                        </div>
+                        <div class="col-md-3">
                             <label>Role</label>
                             <select name="role" class="form-control">
                                 <option value="">All Roles</option>
@@ -25,11 +29,11 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label>&nbsp;</label>
                             <button type="submit" class="btn btn-primary btn-block">Filter</button>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-2">
                             <label>&nbsp;</label>
                             <a href="{{ route('users.index') }}" class="btn btn-default btn-block">Reset</a>
                         </div>
@@ -110,10 +114,10 @@
                 </table>
             </div>
             <div class="card-footer table-list-footer">
-                <div>
+                <div class="pagination-wrap">
                     @include('partials.per-page')
                 </div>
-                <div>
+                <div class="pagination-wrap">
                     {{ $users->appends(request()->query())->links() }}
                 </div>
             </div>
