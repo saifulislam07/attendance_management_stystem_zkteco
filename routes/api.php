@@ -10,3 +10,4 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::post('/attendance-sync', [AttendanceController::class, 'sync']);
+Route::get('/attendance-sync/latest', [AttendanceController::class, 'latestSync']);

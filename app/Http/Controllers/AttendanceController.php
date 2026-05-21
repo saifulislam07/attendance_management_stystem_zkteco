@@ -6,6 +6,7 @@ use App\Models\Attendance;
 use App\Models\User;
 use App\Models\TimeTable;
 use App\Models\SyncLog;
+use App\Models\AttendanceRawLog;
 use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Holiday;
@@ -14,6 +15,7 @@ use App\Models\Device;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
 
 class AttendanceController extends Controller
@@ -90,6 +92,10 @@ class AttendanceController extends Controller
      */
     public function sync(Request $request)
     {
+        if (!$this->hasValidSyncToken($request)) {
+            return response()->json(['message' => 'Invalid sync token.'], 401);
+        }
+
         $logs = $request->input('logs', []);
         
         if (empty($logs)) {
@@ -97,21 +103,70 @@ class AttendanceController extends Controller
         }
 
         $processedCount = 0;
+        $duplicateCount = 0;
+        $failedCount = 0;
+        $errors = [];
+        $datesToFinalize = [];
+        $device = $this->resolveDevice($request);
 
         foreach ($logs as $log) {
-            $deviceUserId = $log['device_user_id'];
+            $validator = Validator::make($log, [
+                'device_user_id' => 'required|string',
+                'timestamp' => 'required|date',
+            ]);
+
+            if ($validator->fails()) {
+                $failedCount++;
+                $errors[] = $validator->errors()->first();
+                continue;
+            }
+
+            $deviceUserId = (string) $log['device_user_id'];
             $timestamp = Carbon::parse($log['timestamp']);
+
+            if ($this->isInvalidPunchTime($timestamp)) {
+                $failedCount++;
+                $errors[] = "Ignored invalid punch for device user {$deviceUserId} at {$timestamp}.";
+                continue;
+            }
+
             $date = $timestamp->toDateString();
             $time = $timestamp->toTimeString();
+            $datesToFinalize[$date] = true;
+
+            $rawLog = AttendanceRawLog::firstOrCreate(
+                [
+                    'device_user_id' => $deviceUserId,
+                    'punch_time' => $timestamp,
+                ],
+                [
+                    'device_id' => $device?->id,
+                    'status' => 'received',
+                ]
+            );
+
+            if (!$rawLog->wasRecentlyCreated) {
+                $duplicateCount++;
+                continue;
+            }
 
             // 1. Find the user
             $user = User::where('device_user_id', $deviceUserId)->first();
             if (!$user) {
+                $rawLog->update([
+                    'status' => 'failed',
+                    'error' => 'No matching user found.',
+                ]);
+                $failedCount++;
+                $errors[] = "No user found for device user {$deviceUserId}.";
                 continue; 
             }
 
+            $rawLog->update(['user_id' => $user->id]);
+
             // 2. Check if Holiday or Approved Leave
             if ($this->isHolidayOrLeave($user, $date)) {
+                $rawLog->update(['status' => 'skipped']);
                 continue; 
             }
 
@@ -135,16 +190,51 @@ class AttendanceController extends Controller
             $this->calculateStatus($attendance, $user);
             
             $attendance->save();
+            $rawLog->update(['status' => 'processed']);
             $processedCount++;
         }
 
+        foreach (array_keys($datesToFinalize) as $date) {
+            $this->markAbsentUsersForDate($date);
+        }
+
         // Record Sync Log
-        SyncLog::create(['last_sync_time' => Carbon::now()]);
+        SyncLog::create([
+            'device_id' => $device?->id,
+            'last_sync_time' => Carbon::now(),
+            'total_records' => count($logs),
+            'processed_records' => $processedCount,
+            'duplicate_records' => $duplicateCount,
+            'failed_records' => $failedCount,
+            'errors' => empty($errors) ? null : implode("\n", array_slice($errors, 0, 20)),
+        ]);
 
         return response()->json([
             'message' => 'Attendance synchronized.',
             'processed_count' => $processedCount,
+            'duplicate_count' => $duplicateCount,
+            'failed_count' => $failedCount,
             'last_sync' => Carbon::now()->toDateTimeString()
+        ]);
+    }
+
+    public function latestSync(Request $request)
+    {
+        if (!$this->hasValidSyncToken($request)) {
+            return response()->json(['message' => 'Invalid sync token.'], 401);
+        }
+
+        $device = $this->resolveDevice($request);
+        $query = SyncLog::query();
+
+        if ($device) {
+            $query->where('device_id', $device->id);
+        }
+
+        $lastSync = $query->latest('last_sync_time')->value('last_sync_time');
+
+        return response()->json([
+            'last_sync_time' => $lastSync ? Carbon::parse($lastSync)->toDateTimeString() : null,
         ]);
     }
 
@@ -191,8 +281,13 @@ class AttendanceController extends Controller
 
         if (!$timetable) return;
 
+        if (!$attendance->check_in) {
+            $attendance->status = 'Absent';
+            return;
+        }
+
         $checkIn = Carbon::parse($attendance->date . ' ' . $attendance->check_in);
-        $checkOut = Carbon::parse($attendance->date . ' ' . $attendance->check_out);
+        $checkOut = $attendance->check_out ? Carbon::parse($attendance->date . ' ' . $attendance->check_out) : null;
         
         $inTime = Carbon::parse($attendance->date . ' ' . $timetable->in_time);
         $lateTime = Carbon::parse($attendance->date . ' ' . $timetable->late_time);
@@ -210,17 +305,101 @@ class AttendanceController extends Controller
             $attendance->status = 'Present';
         }
 
-        if ($attendance->check_in === $attendance->check_out && Carbon::now()->gt($outTime)) {
+        if (!$checkOut || ($attendance->check_in === $attendance->check_out && Carbon::now()->gt($outTime))) {
              $attendance->status = 'Missing Punch';
         }
 
-        if ($attendance->check_out && $attendance->status !== 'Missing Punch') {
+        if ($checkOut) {
+            $attendance->working_hours = round($checkIn->floatDiffInHours($checkOut), 2);
+
+            if ($timetable->overtime_start) {
+                $overtimeStart = Carbon::parse($attendance->date . ' ' . $timetable->overtime_start);
+                $attendance->overtime_hours = $checkOut->gt($overtimeStart)
+                    ? round($overtimeStart->floatDiffInHours($checkOut), 2)
+                    : 0;
+            }
+        }
+
+        if ($checkOut && $attendance->status !== 'Missing Punch') {
             if ($checkOut->lt($outTime)) {
                 $attendance->early_leave = true;
             } else {
                 $attendance->early_leave = false;
             }
         }
+    }
+
+    private function hasValidSyncToken(Request $request): bool
+    {
+        $token = config('services.attendance_sync.token');
+
+        if (!$token) {
+            return app()->environment('local');
+        }
+
+        $providedToken = $request->bearerToken() ?: $request->header('X-Sync-Token');
+
+        return is_string($providedToken) && hash_equals($token, $providedToken);
+    }
+
+    private function resolveDevice(Request $request): ?Device
+    {
+        if ($request->filled('device_id')) {
+            return Device::find($request->input('device_id'));
+        }
+
+        if ($request->filled('device_ip')) {
+            return Device::where('ip_address', $request->input('device_ip'))->first();
+        }
+
+        return null;
+    }
+
+    private function isInvalidPunchTime(Carbon $timestamp): bool
+    {
+        if ($timestamp->isFuture()) {
+            return true;
+        }
+
+        return $timestamp->format('H:i:s') === '00:00:00';
+    }
+
+    private function markAbsentUsersForDate(string $date): void
+    {
+        if (Holiday::where('date', $date)->exists()) {
+            return;
+        }
+
+        $dayOfWeek = Carbon::parse($date)->format('l');
+
+        User::query()
+            ->whereIn('role', ['student', 'teacher'])
+            ->whereDoesntHave('attendances', function ($query) use ($date) {
+                $query->where('date', $date);
+            })
+            ->chunkById(100, function ($users) use ($date, $dayOfWeek) {
+                foreach ($users as $user) {
+                    if ($this->isHolidayOrLeave($user, $date)) {
+                        continue;
+                    }
+
+                    $timetable = TimeTable::where('role', $user->role)
+                        ->where('day', $dayOfWeek)
+                        ->when($user->role === 'student', function ($query) use ($user) {
+                            $query->where('class_id', $user->class_id);
+                        }, function ($query) {
+                            $query->whereNull('class_id');
+                        })
+                        ->first();
+
+                    if ($timetable) {
+                        Attendance::firstOrCreate(
+                            ['user_id' => $user->id, 'date' => $date],
+                            ['status' => 'Absent']
+                        );
+                    }
+                }
+            });
     }
 
     /**
@@ -254,7 +433,19 @@ class AttendanceController extends Controller
         $apiUrl = url('/api/attendance-sync');
 
         foreach ($devices as $device) {
-            $command = "python sync_attendance.py {$device->ip_address} {$apiUrl} {$device->port}";
+            $commandParts = [
+                'python',
+                'sync_attendance.py',
+                $device->ip_address,
+                $apiUrl,
+                (string) $device->port,
+            ];
+
+            if (config('services.attendance_sync.token')) {
+                $commandParts[] = config('services.attendance_sync.token');
+            }
+
+            $command = implode(' ', array_map('escapeshellarg', $commandParts));
             $output = shell_exec($command);
             
             $results[] = [

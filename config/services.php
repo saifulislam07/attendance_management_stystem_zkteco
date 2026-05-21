@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'attendance_sync' => [
+        'token' => env('ATTENDANCE_SYNC_TOKEN'),
+    ],
+
 ];

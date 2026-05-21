@@ -16,6 +16,8 @@ class Attendance extends Model
         'check_out',
         'status',
         'early_leave',
+        'working_hours',
+        'overtime_hours',
     ];
 
     public function user()

@@ -2,29 +2,30 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\SchoolClass;
-use App\Models\Section;
 use App\Models\Attendance;
+use App\Models\AttendanceRawLog;
 use App\Models\Holiday;
 use App\Models\Leave;
+use App\Models\SchoolClass;
+use App\Models\Section;
+use App\Models\SyncLog;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 
-class DatabaseSeeder extends Seeder
-{
+class DatabaseSeeder extends Seeder {
     /**
      * Seed the application's database.
      */
-    public function run(): void
-    {
+    public function run(): void {
         // 0. Disable foreign key checks & Truncate Tables
         \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
         User::truncate();
         SchoolClass::truncate();
         Section::truncate();
         Attendance::truncate();
+        AttendanceRawLog::truncate();
+        SyncLog::truncate();
         Holiday::truncate();
         Leave::truncate();
         \Illuminate\Support\Facades\DB::table('settings')->truncate();
@@ -43,18 +44,18 @@ class DatabaseSeeder extends Seeder
 
         // 2. Create Constant Admin
         $admin = User::firstOrCreate(
-            ['email' => 'admin@admin.com'],
+            ['email' => 'admin@gmail.com'],
             [
-                'name' => 'Super Admin',
-                'password' => Hash::make('password'),
+                'name'           => 'Super Admin',
+                'password'       => Hash::make('111111'),
                 'device_user_id' => '1',
-                'role' => 'admin',
+                'role'           => 'admin',
             ]
         );
         $admin->assignRole('admin');
 
         // 3. Create Bulk Data (100+ Each)
-        
+
         // Classes & Sections
         $classes = SchoolClass::factory()->count(20)->create();
         $sections = [];
@@ -68,7 +69,7 @@ class DatabaseSeeder extends Seeder
                 $section = $sections[array_rand($sections)];
                 $u->update([
                     'section_id' => $section->id,
-                    'class_id' => $section->class_id,
+                    'class_id'   => $section->class_id,
                 ]);
             }
         });
@@ -82,18 +83,20 @@ class DatabaseSeeder extends Seeder
         // Attendance (Large Volume for reports)
         foreach ($users as $user) {
             // Generate last 15 days of attendance for each user
-            for($i = 0; $i < 15; $i++) {
+            for ($i = 0; $i < 15; $i++) {
                 $date = now()->subDays($i)->format('Y-m-d');
-                
+
                 // Skip Fridays (General weekend)
-                if (date('l', strtotime($date)) == 'Friday') continue;
+                if (date('l', strtotime($date)) == 'Friday') {
+                    continue;
+                }
 
                 Attendance::updateOrCreate(
                     ['user_id' => $user->id, 'date' => $date],
                     [
-                        'check_in' => '09:' . mt_rand(10, 59) . ':00',
+                        'check_in'  => '09:' . mt_rand(10, 59) . ':00',
                         'check_out' => '16:' . mt_rand(10, 59) . ':00',
-                        'status' => 'Present',
+                        'status'    => 'Present',
                     ]
                 );
             }

@@ -13,6 +13,9 @@ class TimeTable extends Model
         'in_time',
         'late_time',
         'out_time',
+        'grace_time',
+        'half_day_time',
+        'overtime_start',
     ];
 
     public function schoolClass()

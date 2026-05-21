@@ -1,0 +1,255 @@
+School Attendance System - Work Steps
+=====================================
+
+Goal
+----
+সবাই ZKTeco ডিভাইসে punch করবে। Laptop/PC বন্ধ থাকলেও punch data ডিভাইসে জমা থাকবে।
+Laptop/PC অন হলে Python sync script ডিভাইস থেকে নতুন logs নিয়ে Laravel software-এ sync করবে।
+
+
+Overall Flow
+------------
+1. Student/Teacher biometric device-এ punch করবে।
+2. ZKTeco device punch logs নিজের memory-তে save করবে।
+3. Laptop/PC on হলে Laravel app এবং database চালু হবে।
+4. Python sync script automatically run হবে।
+5. Script device থেকে last sync-এর পরের নতুন logs fetch করবে।
+6. Script Laravel API-তে logs send করবে।
+7. Laravel raw logs save করবে এবং duplicate logs ignore করবে।
+8. Laravel attendance calculate করবে:
+   - check_in = দিনের প্রথম punch
+   - check_out = দিনের শেষ punch
+   - Present / Late / Half Day / Missing Punch / Absent
+   - Early Leave
+   - Working Hours
+   - Overtime
+9. Admin panel/report থেকে attendance দেখা যাবে।
+
+
+Required Setup
+--------------
+1. ZKTeco device same LAN network-এ রাখতে হবে।
+2. Device-এর fixed/static IP set করতে হবে।
+   Example: 192.168.1.201
+3. Device port usually 4370.
+4. Laravel project local server/Laragon দিয়ে চলবে।
+5. MySQL database চালু থাকতে হবে।
+6. Python installed থাকতে হবে।
+7. Python package install করতে হবে:
+   pip install requests zk
+
+
+Laravel Setup
+-------------
+1. .env file check করুন:
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=attendance_management
+   DB_USERNAME=root
+   DB_PASSWORD=
+
+2. API security token set করুন:
+   ATTENDANCE_SYNC_TOKEN=your-secret-token
+
+3. Config clear করুন:
+   php artisan config:clear
+
+4. Migration run করুন:
+   php artisan migrate
+
+5. Seeder run করতে হলে:
+   php artisan db:seed
+
+6. Laravel app run করুন:
+   php artisan serve
+
+   অথবা Laragon virtual host ব্যবহার করলে:
+   http://attendance.test
+
+
+Device Entry Rules
+------------------
+1. Laravel user-এর device_user_id এবং ZKTeco device user ID একই হতে হবে।
+2. Student হলে class_id থাকতে হবে।
+3. Teacher হলে class mapping লাগবে না।
+4. Timetable আগে setup করতে হবে।
+5. Sunday-Saturday প্রতিদিনের timetable add করতে হবে।
+
+
+Timetable Rules
+---------------
+1. Student timetable class-wise হবে।
+2. Teacher timetable global হবে, class_id null থাকবে।
+3. Required fields:
+   - role
+   - class_id, only for student
+   - day
+   - in_time
+   - late_time
+   - out_time
+4. Advanced fields:
+   - grace_time
+   - half_day_time
+   - overtime_start
+
+
+Manual Sync Process
+-------------------
+Admin panel থেকে Sync Device Data button click করলে:
+1. Active devices table থেকে device list আসবে।
+2. Laravel Python script call করবে।
+3. Script device থেকে logs fetch করবে।
+4. Last sync-এর আগের logs skip করবে।
+5. New logs API-তে পাঠাবে।
+6. Laravel attendance update করবে।
+
+
+Python Script Manual Command
+----------------------------
+Example with artisan server:
+
+python d:\laragon\www\learning\attendance_management_stystem_zkteco\sync_attendance.py 192.168.1.201 http://127.0.0.1:8000/api/attendance-sync 4370 your-secret-token
+
+Example with Laragon virtual host:
+
+python d:\laragon\www\learning\attendance_management_stystem_zkteco\sync_attendance.py 192.168.1.201 http://attendance.test/api/attendance-sync 4370 your-secret-token
+
+
+Automatic Sync On Laptop Startup
+--------------------------------
+Use Windows Task Scheduler.
+
+1. Open Task Scheduler.
+2. Create Basic Task.
+3. Name:
+   Attendance Auto Sync
+4. Trigger:
+   At log on
+   অথবা
+   At startup
+5. Action:
+   Start a program
+6. Program/script:
+   python
+7. Add arguments:
+   d:\laragon\www\learning\attendance_management_stystem_zkteco\sync_attendance.py 192.168.1.201 http://attendance.test/api/attendance-sync 4370 your-secret-token
+8. Start in:
+   d:\laragon\www\learning\attendance_management_stystem_zkteco
+9. Finish.
+
+Important:
+Laravel/Laragon/MySQL আগে চালু না থাকলে sync fail হতে পারে।
+তাই Laragon auto-start enable করা ভালো।
+
+
+Recommended Startup Order
+-------------------------
+1. Laptop/PC on.
+2. Laragon auto-start.
+3. Apache/Nginx and MySQL start.
+4. Task Scheduler Python sync script run.
+5. Attendance software receives logs.
+
+If sync task runs too early, Task Scheduler-এ delay add করুন:
+Trigger settings -> Delay task for 1 minute.
+
+
+Duplicate Prevention
+--------------------
+System duplicate ঠেকাবে এইভাবে:
+1. Raw logs table:
+   device_user_id + punch_time unique.
+2. Attendance table:
+   user_id + date unique.
+3. Same punch বারবার sync হলেও duplicate attendance হবে না।
+
+
+Attendance Calculation
+----------------------
+1. First punch = check_in.
+2. Last punch = check_out.
+3. check_in > late_time + grace_time হলে Late.
+4. check_in > half_day_time হলে Half Day.
+5. check_out না থাকলে Missing Punch.
+6. check_out < out_time হলে Early Leave.
+7. No punch but timetable exists হলে Absent.
+8. Holiday হলে absent count হবে না.
+9. Approved leave হলে status Leave হবে.
+
+
+Reports
+-------
+1. Daily report:
+   Present, Late, Absent, Half Day, Missing Punch, Leave.
+2. Monthly report:
+   User-wise summary.
+3. Individual report:
+   Single student/teacher attendance history.
+4. Export:
+   Current system CSV/Excel-friendly export support করে।
+5. PDF:
+   Later dompdf/snappy package দিয়ে add করা যাবে।
+
+
+Device Management
+-----------------
+1. Admin panel থেকে Devices add করুন।
+2. Fields:
+   - name
+   - ip_address
+   - port
+   - location
+   - status active/inactive
+3. Sync button only active devices sync করবে।
+
+
+Testing Checklist
+-----------------
+1. Device ping হয় কিনা check:
+   ping 192.168.1.201
+2. Laravel app browser-এ open হয় কিনা check।
+3. Login:
+   admin@gmail.com
+4. Device user ID এবং Laravel user device_user_id match করছে কিনা check।
+5. Timetable আছে কিনা check।
+6. Manual command দিয়ে Python script run করুন।
+7. Admin panel attendance list check করুন।
+8. Same command আবার run করে duplicate হচ্ছে কিনা check করুন।
+9. Reports page check করুন।
+10. Task Scheduler দিয়ে auto sync test করুন।
+
+
+Common Problems
+---------------
+1. Device connection failed:
+   - Device IP ভুল
+   - Device same network-এ নেই
+   - Port 4370 blocked
+   - Device off
+
+2. API error 401:
+   - ATTENDANCE_SYNC_TOKEN mismatch
+   - Python command-এ token দেওয়া হয়নি
+
+3. Attendance user found না হলে:
+   - device_user_id mismatch
+
+4. Status calculate না হলে:
+   - Timetable missing
+   - Student class_id missing
+   - Day spelling mismatch
+
+5. Sync runs before Laravel starts:
+   - Task Scheduler delay add করুন
+   - Laragon auto-start enable করুন
+
+
+Pending Future Improvements
+---------------------------
+1. SMS gateway integration.
+2. Real PDF export.
+3. Email notification.
+4. Better offline device alert.
+5. Multi-school SaaS structure.
+6. Mobile app.
